@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Editing Workspace</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+    <style>
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+
+        /* Header Section */
+        .header {
+            background-color: #63b2f3;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+        }
+
+        .search-bar {
+            width: 30%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-right: 20px;
+        }
+
+        /* Container */
+        .container {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            max-width: 1200px;
+            width: 90%;
+            margin: 0 auto;
+            padding-top: 20px;
+        }
+
+        .operations-panel {
+            width: 200px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+            position: relative; /* Change position to relative */
+            z-index: 1;
+        }
+
+        .operations-panel h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .operations-panel ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        .operations-panel button i {
+            margin-right: 5px;
+        }
+
+        .operations-panel button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-bottom: 10px;
+            transition: background-color 0.3s ease;
+        }
+
+        .operations-panel button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Filter Effects */
+        .filter-effects, .tool-selector, .editing-options, .toolbar {
+            display: none;
+            top: 80px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+            position: absolute;
+            left: 210px;
+            z-index: 1;
+        }
+
+        .filter-effects h2, .tool-selector h2, .editing-options h2, .toolbar h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .filter-effects ul, .tool-selector ul, .editing-options ul, .toolbar ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 15px;
+        }
+
+        .filter-effects button,
+.tool-selector button,
+.editing-options button,
+.toolbar button {
+    width: 100%;
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-bottom: 10px;
+    transition: background-color 0.3s ease;
+   
+}
+
+
+
+
+        .filter-effects button:hover, .tool-selector button:hover, .editing-options button:hover, .toolbar button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Expanded state */
+        .expanded {
+            display: block;
+        }
+        #image-container {
+            border: 1px solid black;
+            display: inline-block;
+        }
+
+        /* Image Preview */
+        .image-preview {
+            position: absolute;
+            left: 520px; /* Adjust the right positioning */
+            top: 100px; /* Adjust the top positioning as needed */
+            width: 300px; /* Adjust the width as needed */
+            margin-top: 20px;
+            z-index: 0; /* Lower the z-index to ensure other elements appear on top */
+        }
+
+        .image-preview h2 {
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            display: block;
+            margin: 0 auto;
+            margin-bottom: 15px;
+        }
+
+        canvas {
+  display: block;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}        
+    </style>
+</head>
+<body>
+<div class="header">
+    <h1>Image Editing Workspace</h1>
+    <input type="text" class="search-bar" placeholder="Search...">
+    <div class="navigation">
+        <a href="images.html">Home</a>
+        <a href="#">About</a>
+        <a href="#">Gallery</a>
+        <a href="#">Help/Support</a>
+        <a href="#">Settings</a>
+        <a href="account.html">Account</a>
+    </div>
+    <div class="save-undo-redo-buttons">
+        <button id="saveBtn"><i class="fas fa-save"></i> Save</button>
+        <button id="undoBtn"><i class="fas fa-undo"></i> Undo</button>
+        <button id="redoBtn"><i class="fas fa-redo"></i> Redo</button>
+    </div>
+</div>
+<div class="operations-panel">
+    <h2>Operations</h2>
+    <ul>
+        <li><button id="toggle-tool-selector"><i class="fas fa-tools"></i> Toggle Tool Selector</button></li>
+        <li><button id="toggle-editing-options"><i class="fas fa-edit"></i> Toggle Editing Options</button></li>
+        <li><button id="toggle-toolbar"><i class="fas fa-wrench"></i> Toolbar</button></li>
+        <li><button id="toggle-filter-effects"><i class="fas fa-images"></i> Toggle Filter Effects</button></li>
+    </ul>
+</div>
+<div class="toolbar" id="toolbar">
+    <h2>Toolbar</h2>
+    <ul>
+    <li><button id="cropBtn"><i class="fas fa-crop"></i> Crop</button></li>
+    <li><button id="adjustmentsBtn"><i class="fas fa-adjust"></i> Adjustments</button></li>
+    <li><button id="rotateBtn"><i class="fas fa-undo"></i> Rotate</button></li>
+    <li><button id="flipHorizontalBtn"><i class="fas fa-arrows-alt-h"></i> Flip Horizontal</button></li>
+    <li><button id="flipVerticalBtn"><i class="fas fa-arrows-alt-v"></i> Flip Vertical</button></li>
+    <li><button id="textOverlayBtn"><i class="fas fa-font"></i> Text Overlay</button></li>
+    <li><button id="drawingToolBtn"><i class="fas fa-pen"></i> Drawing Tools</button></li>
+    <li><button id="resizeBtn"><i class="fas fa-expand-arrows-alt"></i> Resize</button></li>
+    </ul>
+</div>
+<div class="tool-selector" id="tool-selector">
+    <h2>Tool Selector</h2>
+    <ul>
+        <li><button id="cannyedge">Canny Edge Detection</button></li>
+        <li><button id="denseDaisy">Dense Daisy Feature</button></li>
+        <li><button id="NLMdenoising">Non-Local Means Denoising</button></li>
+        <li><button id="blurTool">Blur Tool</button></li>
+        <li><button id="sharpenTool">Sharpen Tool</button></li>
+        <li><button id="colorBalanceTool">Color Balance Tool</button></li>
+        <li><button id="SegmentationTool">Segmentation Tool</button></li>
+
+    </ul>
+</div>
+<div class="editing-options" id="editing-options">
+    <h2>Editing Options</h2>
+    <ul>
+        <li><button>Reset</button></li>
+        <li><button id="autoEnhanceBtn">Auto-Enhance</button></li>
+        <li><button id="autoCropBtn">Auto-Crop</button></li>
+        <li><button id="cloneStampBtn">Clone Stamp / Healing Brush</button></li>
+        <li><button id="redEyeRemovalBtn">Red-Eye Removal</button></li>
+    </ul>
+</div>
+<div class="filter-effects" id="filter-effects">
+    <h2>Filter Effects</h2>
+    <ul>
+        <li><button id="blackWhiteBtn">Black & White</button></li>
+        <li><button id="sepiaBtn">Sepia</button></li>
+        <li><button id="vintageBtn">Vintage</button></li>
+        <!-- Add more buttons for other filter effects -->
+    </ul>
+</div>
+
+<div class="image-preview">
+    <h2>Image Preview</h2>
+    <input type="file" id="image-input" accept="image/*">
+    <div id="image-container"></div>
+</div>
+<script src="https://docs.opencv.org/4.5.3/opencv.js"></script>
+
+
+
+
+
+<script>
+    const toggleToolSelectorBtn = document.getElementById('toggle-tool-selector');
+    const toggleEditingOptionsBtn = document.getElementById('toggle-editing-options');
+    const toggleToolbarBtn = document.getElementById('toggle-toolbar');
+    const toggleFilterEffectsBtn = document.getElementById('toggle-filter-effects');
+    const toolSelector = document.getElementById('tool-selector');
+    const editingOptions = document.getElementById('editing-options');
+    const filterEffects = document.getElementById('filter-effects');
+    const toolbar = document.getElementById('toolbar');
+
+    toggleToolSelectorBtn.addEventListener('click', () => {
+        toolSelector.classList.toggle('expanded');
+    });
+
+    toggleEditingOptionsBtn.addEventListener('click', () => {
+        editingOptions.classList.toggle('expanded');
+    });
+
+    toggleToolbarBtn.addEventListener('click', () => {
+        toolbar.classList.toggle('expanded');
+    });
+
+    toggleFilterEffectsBtn.addEventListener('click', () => {
+        filterEffects.classList.toggle('expanded');
+    });
+
+    // Image Preview
+    const imageInput = document.getElementById('image-input');
+    const imageContainer = document.getElementById('image-container');
+
+    imageInput.addEventListener('change', (event) => {
+        if (event.target.files.length > 0) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                const img = new Image();
+                img.src = e.target.result;
+                imageContainer.innerHTML = '';
+                imageContainer.appendChild(img);
+            };
+
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+
+
+
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Get references to the tool selector buttons
+        const cannyEdgeBtn = document.getElementById('cannyedge');
+        const denseDaisyBtn = document.getElementById('denseDaisy');
+        const NLMdenoisingBtn = document.getElementById('NLMdenoising');
+        const blurToolBtn = document.getElementById('blurTool');
+        const sharpenToolBtn = document.getElementById('sharpenTool');
+        const colorBalanceToolBtn = document.getElementById('colorBalanceTool');
+        const segmentationToolBtn = document.getElementById('SegmentationTool');
+        const imageInput = document.getElementById('image-input');
+        const imageContainer = document.getElementById('image-container');
+
+        // Add event listeners to each button
+        if (cannyEdgeBtn) {
+            cannyEdgeBtn.addEventListener('click', () => {
+                performCannyEdgeDetection();
+            });
+        }
+        if(denseDaisyBtn)
+
+        denseDaisyBtn.addEventListener('click', () => {
+            performDenseDaisyFeature();
+        });
+
+        if (NLMdenoisingBtn) {
+            NLMdenoisingBtn.addEventListener('click', () => {
+                performNLMdenoising();
+            });
+        }
+
+        if (blurToolBtn) {
+            blurToolBtn.addEventListener('click', () => {
+                activateBlurTool();
+            });
+        }
+
+        if (sharpenToolBtn) {
+            sharpenToolBtn.addEventListener('click', () => {
+                activateSharpenTool();
+            });
+        }
+
+        if (colorBalanceToolBtn) {
+            colorBalanceToolBtn.addEventListener('click', () => {
+                activateColorBalanceTool();
+            });
+        }
+
+        if (segmentationToolBtn) {
+            segmentationToolBtn.addEventListener('click', () => {
+                activateSegmentationTool();
+            });
+        }
+
+        function performCannyEdgeDetection() {
+                console.log('Canny Edge Detection activated.');
+
+                if (!imageInput.files || !imageInput.files[0]) {
+                    alert('Please select an image file.');
+                    return;
+                }
+
+                // Get the selected image file
+                const file = imageInput.files[0];
+                const reader = new FileReader();
+
+                // Read the selected image file
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Display original image
+                        imageContainer.innerHTML = '';
+                        imageContainer.appendChild(img);
+
+                        // Create canvas for processed image
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+
+                        // Convert to grayscale and perform Canny edge detection
+                        const gray = cv.imread(img);
+                        cv.cvtColor(gray, gray, cv.COLOR_RGBA2GRAY);
+
+                        const edges = new cv.Mat();
+                        cv.Canny(gray, edges, 50, 150, 3, false);
+
+                        // Display processed image on the canvas
+                        cv.imshow(canvas, edges);
+                        imageContainer.appendChild(canvas);
+
+                        // Clean up
+                        gray.delete();
+                        edges.delete();
+                    };
+                    img.src = event.target.result;
+                };
+                reader.readAsDataURL(file);
+                
+            }
+
+
+           
+function convertToGrayscale(imageData) {
+    const grayImageData = new ImageData(imageData.width, imageData.height);
+    for (let i = 0; i < imageData.data.length; i += 4) {
+        const avg = (imageData.data[i] + imageData.data[i + 1] + imageData.data[i + 2]) / 3;
+        grayImageData.data[i] = avg;
+        grayImageData.data[i + 1] = avg;
+        grayImageData.data[i + 2] = avg;
+        grayImageData.data[i + 3] = 255;
+    }
+    return grayImageData;
+}
+function performDenseDaisyFeature(imageData) {
+            console.log('Dense DAISY Feature Extraction');
+
+            // Load the image
+            let src = cv.matFromImageData(imageData);
+
+            // Convert the image to grayscale if needed
+            let gray = new cv.Mat();
+            cv.cvtColor(src, gray, cv.COLOR_RGBA2GRAY);
+
+            // Create a Dense DAISY feature extractor object
+            let daisy = new cv.xfeatures2d_Daisy.create();
+
+            // Compute dense DAISY features
+            let keypoints = new cv.KeyPointVector();
+            let descriptors = new cv.Mat();
+            daisy.compute(gray, keypoints, descriptors);
+
+            // Log the keypoints and descriptors
+            console.log('Keypoints:', keypoints.size());
+            console.log('Descriptors:', descriptors.size());
+
+            // Clean up
+            gray.delete();
+            src.delete();
+            keypoints.delete();
+            descriptors.delete();
+        }
+
+        // Event listener for image input change
+        document.getElementById('image-input').addEventListener('change', function(event) {
+            let input = event.target;
+            let reader = new FileReader();
+            reader.onload = function() {
+                let dataUrl = reader.result;
+                let img = new Image();
+                img.onload = function() {
+                    let canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    let ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, img.width, img.height);
+                    let imageData = ctx.getImageData(0, 0, img.width, img.height);
+                    performDenseDaisyFeature(imageData);
+                };
+                img.src = dataUrl;
+            };
+            reader.readAsDataURL(input.files[0]);
+        });
+
+        function performNLMdenoising() {
+            console.log('Non-Local Means Denoising activated.');
+            if (!imageInput.files || !imageInput.files[0]) {
+        alert('Please select an image file.');
+        return;
+    }
+
+    // Get the selected image file
+    const file = imageInput.files[0];
+    const reader = new FileReader();
+
+    // Read the selected image file
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            // Display original image
+            imageContainer.innerHTML = '';
+            imageContainer.appendChild(img);
+
+            // Create canvas for processed image
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+
+            // Get image data
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Parameters for NLM denoising
+            const h = 10; // Filter parameter
+            const patchSize = 3; // Patch size
+            const searchSize = 5; // Search window size
+
+            // Calculate the squared Euclidean distance between two patches
+            function patchDistance(patch1, patch2) {
+                let sum = 0;
+                for (let i = 0; i < patch1.length; i++) {
+                    sum += Math.pow((patch1[i] - patch2[i]), 2);
+                }
+                return sum;
+            }
+
+            // Apply NLM denoising
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const patchCenter = [x, y];
+                    let weightSum = 0;
+                    const newValue = [0, 0, 0];
+
+                    // Iterate over the search window
+                    for (let sy = -searchSize; sy <= searchSize; sy++) {
+                        for (let sx = -searchSize; sx <= searchSize; sx++) {
+                            const neighborX = x + sx;
+                            const neighborY = y + sy;
+
+                            // Check if the neighbor is within the image boundaries
+                            if (neighborX >= 0 && neighborX < canvas.width && neighborY >= 0 && neighborY < canvas.height) {
+                                const neighborPatchCenter = [neighborX, neighborY];
+                                let patchDistanceSum = 0;
+                                let weight = 0;
+
+                                // Iterate over the patch
+                                for (let py = -patchSize; py <= patchSize; py++) {
+                                    for (let px = -patchSize; px <= patchSize; px++) {
+                                        const currentX = patchCenter[0] + px;
+                                        const currentY = patchCenter[1] + py;
+                                        const neighborX = neighborPatchCenter[0] + px;
+                                        const neighborY = neighborPatchCenter[1] + py;
+
+                                        // Check if the pixel coordinates are within the image boundaries
+                                        if (currentX >= 0 && currentX < canvas.width && currentY >= 0 && currentY < canvas.height &&
+                                            neighborX >= 0 && neighborX < canvas.width && neighborY >= 0 && neighborY < canvas.height) {
+                                            const currentIndex = (currentY * canvas.width + currentX) * 4;
+                                            const neighborIndex = (neighborY * canvas.width + neighborX) * 4;
+
+                                            // Calculate the squared Euclidean distance between patches
+                                            patchDistanceSum += patchDistance([data[currentIndex], data[currentIndex + 1], data[currentIndex + 2]],
+                                                [data[neighborIndex], data[neighborIndex + 1], data[neighborIndex + 2]]);
+                                        }
+                                    }
+                                }
+
+                                // Calculate the weight using the Gaussian function
+                                weight = Math.exp(-patchDistanceSum / (h * h));
+
+                                // Accumulate the weighted value
+                                for (let i = 0; i < 3; i++) {
+                                    newValue[i] += data[(neighborY * canvas.width + neighborX) * 4 + i] * weight;
+                                }
+
+                                weightSum += weight;
+                            }
+                        }
+                    }
+
+                    // Normalize the weighted value and assign it to the pixel
+                    for (let i = 0; i < 3; i++) {
+                        newValue[i] /= weightSum;
+                        data[(y * canvas.width + x) * 4 + i] = newValue[i];
+                    }
+                }
+            }
+
+            // Update the canvas with the denoised image data
+            ctx.putImageData(imageData, 0, 0);
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function activateBlurTool() {
+    console.log('Blur Tool activated.');
+
+    // Get the image element from the image container
+    const img = document.querySelector('.image-preview img');
+
+    // Create a canvas element
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set the canvas size to match the image size
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Draw the image onto the canvas
+    ctx.drawImage(img, 0, 0);
+
+    // Apply blur effect
+    const blurRadius = 5; // Adjust blur radius as needed
+    const blurImageData = applyBlur(ctx.getImageData(0, 0, canvas.width, canvas.height), blurRadius);
+
+    // Put the blurred image data back onto the canvas
+    ctx.putImageData(blurImageData, 0, 0);
+
+    // Replace the image with the blurred image
+    img.src = canvas.toDataURL();
+}
+
+function applyBlur(imageData, radius) {
+    const newData = new Uint8ClampedArray(imageData.data.length);
+
+    const { width, height, data } = imageData;
+
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let r = 0, g = 0, b = 0, a = 0;
+            let count = 0;
+
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    const nx = Math.min(Math.max(x + dx, 0), width - 1);
+                    const ny = Math.min(Math.max(y + dy, 0), height - 1);
+                    const index = (ny * width + nx) * 4;
+
+                    r += data[index];
+                    g += data[index + 1];
+                    b += data[index + 2];
+                    a += data[index + 3];
+                    count++;
+                }
+            }
+
+            const newIndex = (y * width + x) * 4;
+            newData[newIndex] = r / count;
+            newData[newIndex + 1] = g / count;
+            newData[newIndex + 2] = b / count;
+            newData[newIndex + 3] = a / count;
+        }
+    }
+
+    return new ImageData(newData, width, height);
+}
+
+function activateSharpenTool() {
+    console.log('Sharpen Tool activated.');
+
+    // Get the image element from the image container
+    const img = document.querySelector('.image-preview img');
+
+    // Create a canvas element
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set the canvas size to match the image size
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Draw the image onto the canvas
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Get the image data from the canvas
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Apply sharpening effect
+    const sharpenedImageData = applySharpen(data, canvas.width, canvas.height);
+
+    // Put the sharpened image data back onto the canvas
+    ctx.putImageData(sharpenedImageData, 0, 0);
+
+    // Create a new Image object with the sharpened image data
+    const newImg = new Image();
+    newImg.onload = function() {
+        // Replace the old img element with the new one
+        img.parentNode.replaceChild(newImg, img);
+    }
+    newImg.src = canvas.toDataURL();
+}
+
+function applySharpen(data, width, height) {
+    const newData = new Uint8ClampedArray(data.length);
+
+    // Define the sharpening kernel
+    const kernel = [
+        [0, -1, 0],
+        [-1, 5, -1],
+        [0, -1, 0]
+    ];
+
+    // Apply the kernel convolution to each pixel
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            let r = 0, g = 0, b = 0;
+
+            // Apply the kernel to the pixel and its neighbors
+            for (let ky = -1; ky <= 1; ky++) {
+                for (let kx = -1; kx <= 1; kx++) {
+                    const nx = Math.min(Math.max(x + kx, 0), width - 1);
+                    const ny = Math.min(Math.max(y + ky, 0), height - 1);
+                    const index = (ny * width + nx) * 4;
+
+                    // Apply kernel weights to RGB channels
+                    r += data[index] * kernel[ky + 1][kx + 1];
+                    g += data[index + 1] * kernel[ky + 1][kx + 1];
+                    b += data[index + 2] * kernel[ky + 1][kx + 1];
+                }
+            }
+
+            // Set the pixel values
+            const newIndex = (y * width + x) * 4;
+            newData[newIndex] = Math.min(Math.max(r, 0), 255);
+            newData[newIndex + 1] = Math.min(Math.max(g, 0), 255);
+            newData[newIndex + 2] = Math.min(Math.max(b, 0), 255);
+            newData[newIndex + 3] = data[newIndex + 3]; // Preserve alpha channel
+        }
+    }
+
+    // Return the sharpened image data
+    return new ImageData(newData, width, height);
+}
+
+
+function activateColorBalanceTool() {
+    console.log('Color Balance Tool activated.');
+
+    // Get the image element from the image container
+    const img = document.querySelector('.image-preview img');
+
+    // Create a canvas element
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set the canvas size to match the image size
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Draw the image onto the canvas
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Get the image data from the canvas
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Apply color balance effect
+    const balancedImageData = applyColorBalance(data, canvas.width, canvas.height);
+
+    // Put the balanced image data back onto the canvas
+    ctx.putImageData(balancedImageData, 0, 0);
+
+    // Replace the image with the balanced image
+    img.src = canvas.toDataURL();
+}
+
+function applyColorBalance(data, width, height) {
+    const newData = new Uint8ClampedArray(data.length);
+
+    // Define the color balance adjustments for each channel
+    const redAdjustment = 20;   // Adjust red channel by adding 20 to each pixel value
+    const greenAdjustment = 0;  // No adjustment to green channel
+    const blueAdjustment = -20; // Adjust blue channel by subtracting 20 from each pixel value
+
+    // Create a new canvas and context
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // Set the canvas size to match the image size
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+
+    // Put the image data onto the temporary canvas
+    const imageData = new ImageData(data, width, height);
+    tempCtx.putImageData(imageData, 0, 0);
+
+    // Apply adjustments to each pixel
+    const imageDataResult = tempCtx.getImageData(0, 0, width, height);
+    const dataResult = imageDataResult.data;
+
+    for (let i = 0; i < dataResult.length; i += 4) {
+        // Apply adjustments to RGB channels while clamping values to [0, 255] range
+        dataResult[i] = Math.min(Math.max(dataResult[i] + redAdjustment, 0), 255);       // Red channel
+        dataResult[i + 1] = Math.min(Math.max(dataResult[i + 1] + greenAdjustment, 0), 255); // Green channel
+        dataResult[i + 2] = Math.min(Math.max(dataResult[i + 2] + blueAdjustment, 0), 255); // Blue channel
+        dataResult[i + 3] = dataResult[i + 3]; // Preserve alpha channel
+    }
+
+    // Return the balanced image data
+    return imageDataResult;
+}
+
+function activateSegmentationTool() {
+    console.log('Segmentation Tool activated.');
+
+    // Get the image element from the image container
+    const img = document.querySelector('.image-preview img');
+
+    // Create a canvas element
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    // Set the canvas size to match the image size
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Draw the image onto the canvas
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Get the image data from the canvas
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Apply segmentation effect
+    const threshold = 128; // Example threshold value (adjust as needed)
+    const segmentedImageData = applySegmentation(data, canvas.width, canvas.height, threshold);
+
+    // Put the segmented image data back onto the canvas
+    ctx.putImageData(segmentedImageData, 0, 0);
+
+    // Replace the image with the segmented image
+    img.src = canvas.toDataURL();
+}
+
+function applySegmentation(data, width, height, threshold) {
+    const newData = new Uint8ClampedArray(data.length);
+
+    // Iterate through each pixel and perform segmentation
+    for (let i = 0; i < data.length; i += 4) {
+        // Convert RGB to grayscale using luminance formula (assuming the image is in RGBA format)
+        const grayscale = (0.2126 * data[i]) + (0.7152 * data[i + 1]) + (0.0722 * data[i + 2]);
+
+        // Apply segmentation based on the threshold value
+        if (grayscale >= threshold) {
+            // White color for pixels above the threshold
+            newData[i] = 255;     // Red
+            newData[i + 1] = 255; // Green
+            newData[i + 2] = 255; // Blue
+        } else {
+            // Black color for pixels below the threshold
+            newData[i] = 0;       // Red
+            newData[i + 1] = 0;   // Green
+            newData[i + 2] = 0;   // Blue
+        }
+        // Preserve the alpha channel
+        newData[i + 3] = data[i + 3];
+    }
+
+    // Return the segmented image data
+    return new ImageData(newData, width, height);
+}
+
+    
+    });  
+   
+   
+
+
+        
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    // Get references to the editing options buttons
+    const resetBtn = document.querySelector('.editing-options button:nth-child(1)');
+    const autoEnhanceBtn = document.querySelector('#autoEnhanceBtn');
+    const autoCropBtn = document.querySelector('#autoCropBtn');
+    const cloneStampBtn = document.getElementById('cloneStampBtn');
+    const redEyeRemovalBtn = document.getElementById('redEyeRemovalBtn');
+
+    // Add event listeners to each button
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            resetEditing();
+        });
+    }
+
+    if (autoEnhanceBtn) {
+        autoEnhanceBtn.addEventListener('click', () => {
+            autoEnhanceEditing();
+        });
+    }
+
+    if (autoCropBtn) {
+        autoCropBtn.addEventListener('click', () => {
+            autoCropEditing();
+        });
+    }
+
+    if (cloneStampBtn) {
+        cloneStampBtn.addEventListener('click', () => {
+            activateCloneStamp();
+        });
+    }
+
+    if (redEyeRemovalBtn) {
+        redEyeRemovalBtn.addEventListener('click', () => {
+            activateRedEyeRemoval();
+        });
+    }
+
+    // Define functions to perform respective editing actions
+    function resetEditing() {
+        console.log('Resetting editing options.');
+        // Add your code to reset any applied editing options here
+    }
+
+    function autoEnhanceEditing() {
+    console.log('Auto enhancing.');
+
+    // Get the input file element
+    const inputElement = document.getElementById('image-input');
+
+    // Ensure a file has been selected
+    if (!inputElement || !inputElement.files || inputElement.files.length === 0) {
+        console.error('No image selected.');
+        return;
+    }
+
+    // Get the selected file
+    const file = inputElement.files[0];
+
+    // Read the file as an image
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        // Create a new image element
+        const imgElement = document.createElement('img');
+        imgElement.onload = function() {
+            // Create a canvas element
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas dimensions equal to the image dimensions
+            canvas.width = imgElement.width;
+            canvas.height = imgElement.height;
+
+            // Draw the image onto the canvas
+            ctx.drawImage(imgElement, 0, 0);
+
+            // Apply auto-enhancing algorithms (example: brightness adjustment)
+            adjustBrightness(canvas);
+
+            // Create a new image element for the enhanced image
+            const enhancedImgElement = document.createElement('img');
+            enhancedImgElement.src = canvas.toDataURL();
+
+            // Clear the image container
+            const imageContainer = document.getElementById('image-container');
+            //imageContainer.innerHTML = '';
+
+            // Append the enhanced image to the container
+            imageContainer.appendChild(enhancedImgElement);
+        };
+        imgElement.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+// Function to adjust brightness (example)
+function adjustBrightness(canvas) {
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const adjustment = 20; // Example adjustment value
+
+    for (let i = 0; i < data.length; i += 4) {
+        
+        data[i] += adjustment; 
+        data[i + 1] += adjustment; 
+        data[i + 2] += adjustment; 
+    }
+
+    ctx.putImageData(imageData, 0, 0);
+}
+
+    function autoCropEditing() {
+    console.log('Auto cropping.');
+
+    // Get the input file element
+    const inputElement = document.getElementById('image-input');
+
+    // Ensure a file has been selected
+    if (!inputElement || !inputElement.files || inputElement.files.length === 0) {
+        console.error('No image selected.');
+        return;
+    }
+
+    // Get the selected file
+    const file = inputElement.files[0];
+
+    // Read the file as an image
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        // Create a new image element
+        const imgElement = document.createElement('img');
+        imgElement.onload = function() {
+            // Create a canvas element
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas dimensions equal to the image dimensions
+            canvas.width = imgElement.width;
+            canvas.height = imgElement.height;
+
+            // Draw the image onto the canvas
+            ctx.drawImage(imgElement, 0, 0);
+
+            // Get image data
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+
+            // Find non-white pixels
+            let minX = canvas.width;
+            let minY = canvas.height;
+            let maxX = 0;
+            let maxY = 0;
+            for (let y = 0; y < canvas.height; y++) {
+                for (let x = 0; x < canvas.width; x++) {
+                    const offset = (y * canvas.width + x) * 4; // RGBA components
+                    const r = data[offset];
+                    const g = data[offset + 1];
+                    const b = data[offset + 2];
+                    // Assuming white background, check if pixel is not white
+                    if (!(r === 255 && g === 255 && b === 255)) {
+                        if (x < minX) minX = x;
+                        if (x > maxX) maxX = x;
+                        if (y < minY) minY = y;
+                        if (y > maxY) maxY = y;
+                    }
+                }
+            }
+
+            // Calculate the dimensions of the cropped area
+            const width = maxX - minX;
+            const height = maxY - minY;
+
+            // Create a new canvas to hold the cropped image
+            const croppedCanvas = document.createElement('canvas');
+            const croppedCtx = croppedCanvas.getContext('2d');
+            croppedCanvas.width = width;
+            croppedCanvas.height = height;
+
+            // Draw the cropped portion onto the new canvas
+            croppedCtx.drawImage(canvas, minX, minY, width, height, 0, 0, width, height);
+
+            // Create a new image element for the cropped image
+            const croppedImgElement = document.createElement('img');
+            croppedImgElement.src = croppedCanvas.toDataURL();
+
+            // Clear the image container
+            const imageContainer = document.getElementById('image-container');
+            //imageContainer.innerHTML = '';
+
+            // Append the cropped image to the container
+            imageContainer.appendChild(croppedImgElement);
+        };
+        imgElement.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function activateCloneStamp() {
+    console.log('Activating Clone Stamp / Healing Brush.');
+
+    
+        const imageContainer = document.getElementById('image-container');
+        const canvas = imageContainer.querySelector('canvas');
+        if (!canvas) {
+        console.log('No image found in image container. Aborting clone stamp tool.');
+        return;
+    }
+    try {
+        let isSelectingSource = true; // Initially, the user is selecting the source region
+
+        let sourceRegion = null;
+        let destinationRegion = null;
+
+        // Variables to store the starting point of the selection
+        let startX = 0;
+        let startY = 0;
+
+        // Add event listener to handle mouse down events
+        imageContainer.addEventListener('mousedown', handleMouseDown);
+
+        function handleMouseDown(event) {
+            startX = event.clientX;
+            startY = event.clientY;
+
+            // Add event listener to handle mouse up events
+            document.addEventListener('mouseup', handleMouseUp);
+        }
+
+        function handleMouseUp(event) {
+            console.log('Mouse up event triggered.');
+
+            const endX = event.clientX;
+            const endY = event.clientY;
+
+            // Calculate the width and height of the selected region
+            const width = Math.abs(endX - startX);
+            const height = Math.abs(endY - startY);
+
+            // Determine the top-left corner coordinates of the selected region
+            const left = Math.min(startX, endX);
+            const top = Math.min(startY, endY);
+
+            if (isSelectingSource) {
+                // Capture pixel data from the selected source region
+                sourceRegion = captureRegion(left, top, width, height);
+                console.log('Source region captured:', sourceRegion);
+
+                // Switch to selecting the destination region
+                isSelectingSource = false;
+            } else {
+            
+                pasteRegion(sourceRegion, left, top);
+                console.log('Pasted onto destination region');
+
+                
+                isSelectingSource = true;
+            }
+
+            
+            document.removeEventListener('mouseup', handleMouseUp);
+        }
+
+        function captureRegion(left, top, width, height) {
+            console.log('Capturing region.');
+
+            
+            const canvas = document.getElementById('image-container').querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+
+        
+            const imageData = ctx.getImageData(left, top, width, height);
+
+            
+            return imageData;
+        }
+
+        function pasteRegion(pixels, left, top) {
+            console.log('Pasting region.');
+
+            // Get the canvas element and its 2D rendering context
+            const canvas = document.getElementById('image-container').querySelector('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Paste the captured pixel data onto the canvas at the specified position
+            ctx.putImageData(pixels, left, top);
+        }
+    } catch (error) {
+        console.error('An error occurred during clone stamp tool execution:', error);
+    }
+    
+}
+console.log('Calling activateCloneStamp function.');
+activateCloneStamp();
+
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    const imgElement = document.querySelector('#image-container img');
+    imgElement.addEventListener('load', () => {
+        
+        activateRedEyeRemoval();
+    });
+});
+
+function activateRedEyeRemoval() {
+    console.log('Activating Red-Eye Removal.');
+    console.log('Button clicked'); 
+
+    const imageContainer = document.getElementById('image-container');
+    if (!imageContainer) {
+        console.log('No image container found. Aborting red-eye removal.');
+        return;
+    }
+
+    try {
+        const canvas = imageContainer.querySelector('canvas');
+        console.log(canvas);
+        console.log(imageContainer);
+        if (!canvas) {
+            console.log('No canvas found in image container. Aborting red-eye removal.');
+            return;
+        }
+
+        // Get canvas context
+        const ctx = canvas.getContext('2d');
+
+        // Get image data
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        // Red-eye detection and correction
+        for (let i = 0; i < data.length; i += 4) {
+            const red = data[i];
+            const green = data[i + 1];
+            const blue = data[i + 2];
+
+            // Check if the pixel is likely to be red-eye
+            if (red > 150 && green < 100 && blue < 100) {
+                // Desaturate the pixel (reduce red intensity)
+                data[i] = Math.min(red * 0.7, 255); // Adjust the factor as needed
+                data[i + 1] = green * 0.7; // Adjust the factor as needed
+                data[i + 2] = blue * 0.7; // Adjust the factor as needed
+            }
+        }
+
+        // Put the modified image data back onto the canvas
+        ctx.putImageData(imageData, 0, 0);
+
+        console.log('Red-eye removal completed.');
+    } catch (error) {
+        console.error('An error occurred during red-eye removal:', error);
+    }
+}
+    })
+
+
+
+
+</script>
+<script>
+   document.addEventListener('DOMContentLoaded', () => {
+  // Get references to the filter effects buttons
+  const blackWhiteBtn = document.querySelector('#blackWhiteBtn');
+  const sepiaBtn = document.querySelector('#sepiaBtn');
+  const vintageBtn = document.querySelector('#vintageBtn');
+
+  console.log("Buttons found:", blackWhiteBtn, sepiaBtn, vintageBtn);
+
+  // Add event listeners to each button
+  if (blackWhiteBtn) {
+    blackWhiteBtn.addEventListener('click', () => {
+      console.log('Black & White button clicked');
+      applyFilterEffect('blackWhite');
+    });
+  }
+
+  if (sepiaBtn) {
+    sepiaBtn.addEventListener('click', () => {
+      console.log('Sepia button clicked');
+      applyFilterEffect('sepia');
+    });
+  }
+
+  if (vintageBtn) {
+    vintageBtn.addEventListener('click', () => {
+      console.log('Vintage button clicked');
+      applyFilterEffect('vintage');
+    });
+  }
+
+  function applyFilterEffect(effect) {
+    console.log('Applying filter effect:', effect);
+    const imageContainer = document.getElementById('image-container');
+    const img = imageContainer.querySelector('img');
+
+    if (!img) {
+      console.log('No image found in image container. Aborting filter effect.');
+      return;
+    }
+
+    // Create a new canvas element
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    imageContainer.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+
+    // Draw the image onto the canvas
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Get image data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Apply the selected filter effect
+    switch (effect) {
+      case 'blackWhite':
+        applyBlackWhiteFilter(data);
+        break;
+      case 'sepia':
+        applySepiaFilter(data);
+        break;
+      case 'vintage':
+        applyVintageFilter(data);
+        break;
+      default:
+        console.log('Unknown filter effect:', effect);
+        break;
+    }
+
+    // Put the modified image data back onto the canvas
+    ctx.putImageData(imageData, 0, 0);
+
+    console.log('Filter effect applied:', effect);
+  }
+
+  function applyBlackWhiteFilter(data) {
+    // Loop through each pixel and convert to black and white
+    for (let i = 0; i < data.length; i += 4) {
+      const avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+      data[i] = avg; // Red channel
+      data[i + 1] = avg; // Green channel
+      data[i + 2] = avg; // Blue channel
+    }
+  }
+
+  function applySepiaFilter(data) {
+    // Loop through each pixel and apply sepia effect
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      data[i] = Math.min(255, 0.393 * r + 0.769 * g + 0.189 * b); // Red channel
+      data[i + 1] = Math.min(255, 0.349 * r + 0.686 * g + 0.168 * b); // Green channel
+      data[i + 2] = Math.min(255, 0.272 * r + 0.534 * g + 0.131 * b); // Blue channel
+    }
+  }
+
+  function applyVintageFilter(data) {
+    // Loop through each pixel and apply vintage effect
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      data[i] = Math.min(255, (0.393 * r + 0.769 * g + 0.189 * b) * 0.8); // Red channel
+      data[i + 1] = Math.min(255, (0.349 * r + 0.686 * g + 0.168 * b) * 0.8); // Green channel
+      data[i + 2] = Math.min(255, (0.272 * r + 0.534 * g + 0.131 * b) * 0.8); // Blue channel
+    }
+  }
+});
+
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+    // Get references to the toolbar buttons
+    const cropBtn = document.querySelector('#cropBtn');
+    const adjustmentsBtn = document.querySelector('#adjustmentsBtn');
+    const rotateBtn = document.getElementById('rotateBtn');
+    const flipHorizontalBtn = document.getElementById('flipHorizontalBtn');
+    const flipVerticalBtn = document.getElementById('flipVerticalBtn');
+    const textOverlayBtn = document.getElementById('textOverlayBtn');
+    const drawingToolBtn = document.getElementById('drawingToolBtn');
+    const resizeBtn = document.getElementById('resizeBtn');
+
+if (cropBtn) {
+    cropBtn.addEventListener('click', () => {
+        console.log('Crop button clicked');
+
+        // Get the image element
+        const image = document.querySelector('.image-preview img');
+        if (!image) {
+            console.error('Image element not found.');
+            return;
+        }
+
+        // Create a canvas to draw the cropped image
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas dimensions to match the cropped area
+        canvas.width = 200; // Example: Set the desired width for the cropped area
+        canvas.height = 150; // Example: Set the desired height for the cropped area
+
+        // Define the cropping parameters (e.g., crop rectangle coordinates)
+        const cropX = 50; // Example: Set the x-coordinate for the top-left corner of the crop area
+        const cropY = 50; // Example: Set the y-coordinate for the top-left corner of the crop area
+        const cropWidth = 150; // Example: Set the width of the crop area
+        const cropHeight = 100; // Example: Set the height of the crop area
+
+        // Draw the cropped image onto the canvas
+        ctx.drawImage(image, cropX, cropY, cropWidth, cropHeight, 0, 0, canvas.width, canvas.height);
+
+        // Replace the original image with the cropped image
+        image.src = canvas.toDataURL();
+    });
+}
+
+
+
+
+
+
+if (adjustmentsBtn) {
+    adjustmentsBtn.addEventListener('click', () => {
+        console.log('Adjustments button clicked');
+        adjustContrast(50); // Example: Adjust contrast by 50 units
+    });
+}
+
+function adjustContrast(amount) {
+    const imageContainer = document.getElementById('image-container');
+    const img = imageContainer.querySelector('img');
+
+    if (!img) {
+        console.error('Image element not found.');
+        return;
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Draw the image onto the canvas
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Get image data
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+
+    // Apply contrast adjustment to each pixel
+    const factor = (259 * (amount + 255)) / (255 * (259 - amount));
+
+    for (let i = 0; i < data.length; i += 4) {
+        // Adjust the RGB values
+        data[i] = factor * (data[i] - 128) + 128; // Red channel
+        data[i + 1] = factor * (data[i + 1] - 128) + 128; // Green channel
+        data[i + 2] = factor * (data[i + 2] - 128) + 128; // Blue channel
+    }
+
+    // Put the modified image data back onto the canvas
+    ctx.putImageData(imageData, 0, 0);
+
+    // Update the image source to the adjusted image
+    img.src = canvas.toDataURL();
+
+    console.log('Image contrast adjusted.');
+}
+
+    if (rotateBtn) {
+    rotateBtn.addEventListener('click', () => {
+        console.log('Rotate button clicked');
+        rotateImage();
+    });
+}
+
+function rotateImage() {
+    const imageContainer = document.getElementById('image-container');
+    const img = imageContainer.querySelector('img');
+
+    if (!img) {
+        console.error('Image element not found.');
+        return;
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = img.height; // Swap width and height to rotate
+    canvas.height = img.width;
+
+    // Rotate the image 90 degrees clockwise
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.rotate(Math.PI / 2); // Rotate 90 degrees (in radians)
+    ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+    // Update the image source to the rotated image
+    img.src = canvas.toDataURL();
+
+    console.log('Image rotated.');
+}
+
+    if (flipHorizontalBtn) {
+    flipHorizontalBtn.addEventListener('click', () => {
+        console.log('Flip Horizontal button clicked');
+        flipImageHorizontal();
+    });
+}
+
+function flipImageHorizontal() {
+    const imageContainer = document.getElementById('image-container');
+    const img = imageContainer.querySelector('img');
+
+    if (!img) {
+        console.error('Image element not found.');
+        return;
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Flip the image horizontally
+    ctx.translate(canvas.width, 0);
+    ctx.scale(-1, 1);
+
+    // Draw the image onto the canvas (flipped)
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Update the image source to the flipped image
+    img.src = canvas.toDataURL();
+
+    console.log('Image flipped horizontally.');
+}
+
+    if (flipVerticalBtn) {
+    flipVerticalBtn.addEventListener('click', () => {
+        console.log('Flip Vertical button clicked');
+        flipImageVertical();
+    });
+}
+
+function flipImageVertical() {
+    const imageContainer = document.getElementById('image-container');
+    const img = imageContainer.querySelector('img');
+
+    if (!img) {
+        console.error('Image element not found.');
+        return;
+    }
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.width = img.width;
+    canvas.height = img.height;
+
+    // Flip the image vertically
+    ctx.translate(0, canvas.height);
+    ctx.scale(1, -1);
+
+    // Draw the image onto the canvas (flipped)
+    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+    // Update the image source to the flipped image
+    img.src = canvas.toDataURL();
+
+    console.log('Image flipped vertically.');
+}
+    if (textOverlayBtn) {
+    textOverlayBtn.addEventListener('click', () => {
+        console.log('Text Overlay button clicked');
+        addTextOverlay();
+    });
+}
+
+function addTextOverlay() {
+    // Prompt the user to enter the text for overlay
+    const text = prompt('Enter the text for overlay:');
+    if (!text) return; // If the user cancels or enters an empty text, exit
+
+    // Create a new text element
+    const textElement = document.createElement('div');
+    textElement.textContent = text;
+    textElement.style.position = 'absolute';
+    textElement.style.left = '50%';
+    textElement.style.top = '50%';
+    textElement.style.transform = 'translate(-50%, -50%)';
+    textElement.style.backgroundColor = 'rgba(255, 255, 255, 0.5)';
+    textElement.style.padding = '10px';
+    textElement.style.borderRadius = '5px';
+
+    // Append the text element to the image container
+    const imageContainer = document.getElementById('image-container');
+    if (imageContainer) {
+        imageContainer.appendChild(textElement);
+    } else {
+        console.error('Image container not found.');
+        return;
+    }
+}
+    
+if (drawingToolBtn) {
+    drawingToolBtn.addEventListener('click', () => {
+        console.log('Drawing Tools button clicked');
+        initializeDrawingTool();
+    });
+}
+
+function initializeDrawingTool() {
+  // Get the selected image element
+  const image = document.querySelector('.image-preview img');
+  if (!image) {
+    console.error('Image element not found.');
+    return;
+  }
+
+  // Create a new canvas element
+  const canvas = document.createElement('canvas');
+  
+  console.log('Canvas is created.');
+  canvas.style.position = 'absolute';
+  canvas.style.top = image.offsetTop + 'px';
+  canvas.style.left = image.offsetLeft + 'px';
+  canvas.width = image.width;
+  canvas.height = image.height;
+
+  // Append the canvas to the image container
+  const imageContainer = document.getElementById('image-container');
+  if (imageContainer) {
+    imageContainer.appendChild(canvas);
+    
+    console.log('Canvas container found.');
+  } else {
+    console.error('Canvas container not found.');
+    return;
+  }
+
+  // Get the canvas context
+  const ctx = canvas.getContext('2d');
+
+  // Variable to track whether the mouse is currently being pressed
+  let isDrawing = false;
+
+  // Function to start drawing
+  function startDrawing(event) {
+    console.log('Drawing started.');
+    isDrawing = true;
+    draw(event); // Call the draw function initially
+  }
+
+  // Function to draw on the canvas
+  function draw(event) {
+    console.log('Drawing in progress.');
+    if (!isDrawing) return; // Exit if not drawing
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Get the mouse position relative to the canvas
+    const x = event.offsetX;
+    const y = event.offsetY;
+
+    // Drawing settings (e.g., line color, thickness, etc.)
+    ctx.strokeStyle = 'red'; // Example: red color
+    ctx.lineWidth = 10; // Example: line thickness
+
+    // Draw a line from the previous mouse position to the current position
+    ctx.lineTo(x, y);
+
+    // Apply the stroke (draw the line)
+    ctx.stroke();
+
+    // Update the starting point of the next line to the current position
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+}
+
+  // Function to stop drawing
+  function stopDrawing() {
+    console.log('Drawing stopped.');
+    isDrawing = false;
+  }
+
+  // Add event listeners to handle drawing
+  canvas.addEventListener('mousedown', startDrawing);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stopDrawing);
+  canvas.addEventListener('mouseout', stopDrawing);
+}
+
+
+    if (resizeBtn) {
+    resizeBtn.addEventListener('click', () => {
+        console.log('Resize button clicked');
+        // Prompt the user to enter new dimensions
+        const newWidth = prompt('Enter the new width:');
+        const newHeight = prompt('Enter the new height:');
+
+        // Check if valid dimensions are entered
+        if (newWidth && newHeight && !isNaN(newWidth) && !isNaN(newHeight)) {
+            // Convert dimensions to numbers
+            const width = parseInt(newWidth);
+            const height = parseInt(newHeight);
+
+            // Create a new canvas element
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+
+            // Draw the image onto the canvas
+            const imageContainer = document.getElementById('image-container');
+            const img = imageContainer.querySelector('img');
+
+            // Use canvas if img exists, otherwise create a new img element
+            if (img) {
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                imageContainer.removeChild(img);
+            } else {
+                console.log('No image found in image container. Aborting resize.');
+                return;
+            }
+
+            // Append the resized canvas to the image container
+            imageContainer.appendChild(canvas);
+
+            console.log('Image resized successfully.');
+        } else {
+            console.log('Invalid dimensions. Please enter valid numbers.');
+        }
+    });
+}
+
+});
+
+</script>
+</body>
+</html>
